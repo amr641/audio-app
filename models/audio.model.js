@@ -1,3 +1,5 @@
+import mongoose from "mongoose";
+
 const audioSchema = new mongoose.Schema({
     title: {
         type: String,
@@ -12,6 +14,10 @@ const audioSchema = new mongoose.Schema({
     isPrivate: {
         type: Boolean,
         default: false,
+    },
+    audioFile: {
+        type: String,
+        required: [true, "Audio file is required"],
     },
     addedBy: {
         type: mongoose.Schema.Types.ObjectId,

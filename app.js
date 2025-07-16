@@ -1,5 +1,6 @@
 import { globalHandeling } from "./middlewares/globalErrHandeling.js"
 import express from "express"
+import { AudioRouter } from "./routes/audio.routes.js"
 
 export const bootstrap = function (app) {
     app.use(express.json())
@@ -8,7 +9,7 @@ export const bootstrap = function (app) {
         console.log(log)
         next();
     })
-
+    app.use("/audios", AudioRouter);
     app.use((_req, res) => {
         res.status(404).json({ message: "Page Not Found" });
     });
