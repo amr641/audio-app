@@ -9,14 +9,12 @@ const imageTypes = [".jpg", ".jpeg", ".png"];
 // Multer Storage Configuration
 const storage = diskStorage({
     destination: function (req, file, cb) {
-        const userId = req.user?._id?.toString() || "anonymous";
+        const userId = req.user?.userId?.toString() || "anonymous";
         let subFolder = "others";
 
-        if (file.fieldname === "audio") {
+        if (file.fieldname === "audioFile") {
             subFolder = `audio/user_${userId}`;
-        } else if (file.fieldname === "cover") {
-            subFolder = `covers/user_${userId}`;
-        } else if (file.fieldname === "profilePic") {
+        } else if (file.fieldname === "profile") {
             subFolder = `profiles/user_${userId}`;
         }
 
