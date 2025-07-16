@@ -35,7 +35,7 @@ const storage = diskStorage({
 const fileFilter = function (req, file, cb) {
     const ext = extname(file.originalname).toLowerCase();
 
-    if (file.fieldname === "audio" && audioTypes.includes(ext)) {
+    if (file.fieldname === "audioFile" && audioTypes.includes(ext)) {
         cb(null, true);
     } else if ((file.fieldname === "cover" || file.fieldname === "profile") && imageTypes.includes(ext)) {
         cb(null, true);
