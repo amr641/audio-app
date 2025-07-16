@@ -37,7 +37,7 @@ const fileFilter = function (req, file, cb) {
 
     if (file.fieldname === "audio" && audioTypes.includes(ext)) {
         cb(null, true);
-    } else if ((file.fieldname === "cover" || file.fieldname === "profilePic") && imageTypes.includes(ext)) {
+    } else if ((file.fieldname === "cover" || file.fieldname === "profile") && imageTypes.includes(ext)) {
         cb(null, true);
     } else {
         cb(new Error("File type not allowed"), false);
