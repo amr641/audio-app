@@ -2,8 +2,10 @@ import { AppError } from "../utils/customErr.js";
 import Audio from "../models/audio.model.js";
 import path from "path";
 import fs from "fs";
+import { log } from "console";
 const addAudio = async (req, res) => {
     try {
+        log(req.file)
         const { title, genre, isPrivate, audioFile } = req.body;
         if (!req.file) {
             throw new AppError(" no audio provided", 400);
@@ -14,7 +16,7 @@ const addAudio = async (req, res) => {
             genre,
             isPrivate,
             audioFile: req.file.path,
-            addedBy: req.user._id,
+            addedBy: req.user.userId,
         });
         await audio.save();
         res.status(201).json({
@@ -24,8 +26,8 @@ const addAudio = async (req, res) => {
         });
 
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Internal server error" });
+
+        res.status(500).json({ message: "Internal server error", error });
     }
 }
 const getAllAudios = async (req, res) => {
@@ -48,53 +50,33 @@ const getUserAudios = async (req, res) => {
     });
 }
 const streamAudio = (req, res) => {
-    const filename = req.params.filename;
-    const filePath = path.join("uploads", filename);
+    try {
 
-    // Check if file exists
-    if (!fs.existsSync(filePath)) {
-        return res.status(404).json({
-            error: 'Audio file not found'
-        });
+        let { filename } = req.params
+
+        let audioFile = path.resolve(`./uploads/audio/user_${req.user.userId}`, filename + ".mp3");
+        log(audioFile)
+        if (!fs.existsSync(audioFile)) {
+            return res.status(404).json({ success: false, message: "Audio file not found" });
+        }
+        res.setHeader('Content-Type', 'audio/mpeg');
+        const stream = fs.createReadStream(audioFile);
+        stream.on("error", () => {
+            throw new AppError("Error Streaming Audio", 500)
+        })
+        stream.pipe(res);
+
+    } catch (error) {
+        log(error)
+        res.status(500).json({ success: false, message: "internal server err", error })
+
     }
 
-    const stat = fs.statSync(filePath);
-    const fileSize = stat.size;
-    const range = req.headers.range;
 
-    const mimeType = mime.getType(path.extname(filename));
-
-    if (range) {
-        // Parse range header
-        const parts = range.replace(/bytes=/, "").split("-");
-        const start = parseInt(parts[0], 10);
-        const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
-        const chunksize = (end - start) + 1;
-
-        const file = fs.createReadStream(filePath, { start, end });
-
-
-        const head = {
-            'Content-Range': `bytes ${start}-${end}/${fileSize}`,
-            'Accept-Ranges': 'bytes',
-            'Content-Length': chunksize,
-            'Content-Type': mimeType,
-            'Cache-Control': 'no-cache'
-        };
-
-        res.writeHead(206, head);
-        file.pipe(res);
-    } else {
-        // No range requested, send entire file
-        const head = {
-            'Content-Length': fileSize,
-            'Content-Type': mimeType,
-            'Accept-Ranges': 'bytes',
-            'Cache-Control': 'no-cache'
-        };
-
-        res.writeHead(200, head);
-        fs.createReadStream(filePath).pipe(res);
-    }
 }
+
+
+
+
+
 export { addAudio, getAllAudios, getUserAudios, streamAudio };
