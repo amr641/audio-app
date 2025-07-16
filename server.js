@@ -1,4 +1,5 @@
 import express from 'express'
+import "dotenv/config"
 import dbConn from './config/db.js'
 import { bootstrap } from './app.js'
 const app = express()
