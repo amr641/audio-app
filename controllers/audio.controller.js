@@ -49,22 +49,53 @@ const getUserAudios = async (req, res) => {
         audios,
     });
 }
-const streamAudio = (req, res) => {
+const streamAudio = async (req, res) => {
     try {
 
         let { filename } = req.params
 
         let audioFile = path.resolve(`./uploads/audio/user_${req.user.userId}`, filename + ".mp3");
-        log(audioFile)
+
         if (!fs.existsSync(audioFile)) {
             return res.status(404).json({ success: false, message: "Audio file not found" });
         }
-        res.setHeader('Content-Type', 'audio/mpeg');
-        const stream = fs.createReadStream(audioFile);
-        stream.on("error", () => {
-            throw new AppError("Error Streaming Audio", 500)
-        })
-        stream.pipe(res);
+        const audioStat = await fs.promises.stat(audioFile);
+        const audioSize = audioStat.size;
+
+        req.headers.range = 'bytes=1024-'
+        const range = req.headers.range;
+
+        if (range) {
+            // Parse range (e.g., "bytes=0-1023")
+            const parts = range.replace(/bytes=/, "").split("-");
+            const start = parseInt(parts[0], 10);
+            const end = parts[1] ? parseInt(parts[1], 10) : audioSize - 1;
+
+            const chunkSize = (end - start) + 1;
+
+            res.writeHead(206, {
+                'Content-Range': `bytes ${start}-${end}/${audioSize}`,
+                'Accept-Ranges': 'bytes',
+                'Content-Length': chunkSize,
+                'Content-Type': 'audio/mpeg'
+            });
+
+            // Create read stream for the range
+            const stream = fs.createReadStream(audioFile, { start, end });
+            stream.on("error", () => {
+                throw new AppError("Error Streaming Audio", 500)
+            })
+            stream.pipe(res);
+        } else {
+            // No range requested, send entire file
+            res.writeHead(200, {
+                'Content-Length': audioSize,
+                'Content-Type': 'audio/mpeg',
+                'Accept-Ranges': 'bytes'
+            });
+
+            fs.createReadStream(audioFile).pipe(res);
+        }
 
     } catch (error) {
         log(error)
