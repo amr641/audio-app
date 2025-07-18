@@ -2,6 +2,7 @@ import { globalHandeling } from "./middlewares/globalErrHandeling.js"
 import express from "express"
 import { AudioRouter } from "./routes/audio.routes.js"
 import userRouter from "./routes/authroutes.js"
+import { adminRouter } from "./routes/adminTools.routes.js"
 
 export const bootstrap = function (app) {
     app.use(express.json())
@@ -10,7 +11,7 @@ export const bootstrap = function (app) {
         console.log(log)
         next();
     })
-
+    app.use("/admin", adminRouter)
     app.use("/audios", AudioRouter);
     app.use("/users", userRouter)
 

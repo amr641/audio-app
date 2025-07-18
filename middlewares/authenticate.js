@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
 
 
-export const authenticate = async (req, res, next) => {
+const authenticate = async (req, res, next) => {
     const { token } = req.headers;
     jwt.verify(token, process.env.ACCESSTOKEN_KEY, async (err, decoded) => {
         if (err) return res.status(401).json({ message: "inavlid token" });
@@ -14,9 +14,11 @@ export const authenticate = async (req, res, next) => {
 };
 const allowedTo = (...roles) => {
     return (req, res, next) => {
-        if (!roles.includes(req.user.userId)) {
+        if (!roles.includes(req.user.role)) {
             return res.status(403).json({ message: "You Are Not Allowed" })
         }
         next()
     }
 }
+
+export { authenticate, allowedTo }
