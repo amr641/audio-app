@@ -11,21 +11,7 @@ const getAllUsersAudios = async (req, res) => {
         throw error
     }
 }
-// DELETE /api/admin/audio/:id 
-
-const deleteAudioForAdmin = async (req, res) => {
-    try {
-
-        let { id } = req.params;
-        if (!id) throw new AppError("id is required", 400);
-        let audio = await Audio.findById(id);
-        if (!audio) throw new AppError("Audio Not Found", 404);
-        await audio.deleteOne()
-        res.status(200).json({ success: true, message: "audio deleted successfuly" })
-    } catch (error) {
-        throw error
-    }
 
 
-}
-export { getAllUsersAudios, deleteAudioForAdmin }
+
+export { getAllUsersAudios }

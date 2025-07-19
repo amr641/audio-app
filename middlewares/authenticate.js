@@ -1,5 +1,7 @@
 import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
+import Audio from "../models/audio.model.js";
+import { AppError } from "../utils/customErr.js";
 
 
 const authenticate = async (req, res, next) => {
@@ -15,13 +17,27 @@ const authenticate = async (req, res, next) => {
 const allowedTo = (...roles) => {
     return (req, res, next) => {
         if (!roles.includes(req.user.role)) {
-            return res.status(403).json({ message: "You Are Not Allowed" })
+            throw new AppError("You Are Not Allowed", 403)
         }
         next()
     }
 }
-<<<<<<< HEAD
 
-export { authenticate, allowedTo }
-=======
->>>>>>> 6771c2a (yarab)
+const restrictUserActions = async (req, res, next) => {
+    let userId = req.user.userId;
+    let { id } = req.params;
+    console.log(id);
+
+    if (!id) throw new AppError("id is required", 400);
+    let audio = await Audio.findById(id);
+    if (!audio) throw new AppError("Audio Not Found", 404);
+
+    if (userId !== audio.addedBy) throw new AppError("You Are Not Allowed", 403);
+    next()
+
+
+
+}
+
+export { authenticate, allowedTo, restrictUserActions }
+

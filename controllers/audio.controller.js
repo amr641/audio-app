@@ -5,8 +5,7 @@ import fs from "fs";
 import { log } from "console";
 const addAudio = async (req, res) => {
     try {
-        log(req.file)
-        const { title, genre, isPrivate, audioFile } = req.body;
+        const { title, genre, isPrivate } = req.body;
         if (!req.file) {
             throw new AppError(" no audio provided", 400);
         }
@@ -102,12 +101,63 @@ const streamAudio = async (req, res) => {
         res.status(500).json({ success: false, message: "internal server err", error })
 
     }
+}
+const updateAudio = async (req, res) => {
+    let { id } = req.params;
+    let audio = await Audio.findById(id);
+    if (req.file) {
+        try {
+            await audio.updateOne({ audioFile: req.file.path, ...req.body })
 
+        } catch (error) {
+            fs.promises.unlink(req.file.path)
+                .then(() => { log("file deleted") })
+                .catch(err => {
+                    throw new AppError("cannot delete the file", 500)
+                })
 
+            throw new AppError("Err while updating", 500)
+
+        }
+        let oldFile = path.resolve(`./uploads/audio/user_${req.user.userId}`, audio.audioFile + ".mp3");
+        if (!fs.existsSync(oldFile)) {
+            return res.status(404).json({ success: false, message: "old Audio file not found" });
+        }
+        fs.promises.unlink(oldFile)
+            .then(() => { log("old file deleted") })
+            .catch(err => {
+                throw new AppError("cannot delete the old file", 500)
+            })
+        res.status(201).json({ success: true, message: "Audio Updated Successfuly" })
+    } else {
+        await audio.updateOne(req.body)
+        res.status(201).json({ success: true, message: "Audio Updated Successfuly" })
+
+    }
+}
+const deleteAudio = async (req, res) => {
+    let { id } = req.params.id;
+    let audio = await Audio.findById(id);
+    try {
+
+        await audio.deleteOne()
+    } catch (error) {
+        throw new AppError("Err deleteing the audio documnet", 500)
+    }
+
+    let oldFile = path.resolve(`./uploads/audio/user_${req.user.userId}`, audio.audioFile + ".mp3");
+    if (!fs.existsSync(oldFile)) {
+        return res.status(404).json({ success: false, message: " Audio file not found" });
+    }
+    fs.promises.unlink(oldFile)
+        .then(() => { log("old file deleted") })
+        .catch(err => {
+            throw new AppError("cannot delete the old file", 500)
+        })
+    res.status(201).json({ success: true, message: "Audio deleted Successfuly" })
 }
 
 
 
 
-
-export { addAudio, getAllAudios, getUserAudios, streamAudio };
+export { addAudio, getAllAudios, getUserAudios, streamAudio, updateAudio, deleteAudio };
