@@ -1,7 +1,7 @@
 import { Router } from "express";
 import upload from "../config/multer.js";
 import * as ac from "../controllers/audio.controller.js"
-import { authenticate } from "../middlewares/authenticate.js";
+import { authenticate, restrictUserActions } from "../middlewares/authenticate.js";
 import { streamAudioValidation, validateAudioFile } from "../validators/audio.validator.js";
 import { validateRequest } from "../middlewares/validateRequest.js";
 
@@ -11,4 +11,8 @@ AudioRouter
     .post("/", upload.single("audioFile"), validateAudioFile, validateRequest, ac.addAudio)
     .get("/", ac.getAllAudios)
     .get("/mine", ac.getUserAudios)
-    .get("/stream/:filename", streamAudioValidation, validateAudioFile, ac.streamAudio);
+    .get("/stream/:filename", streamAudioValidation, validateAudioFile, ac.streamAudio)
+
+    .route("/:id")
+    .patch(upload.single("audioFile"), restrictUserActions, ac.updateAudio)
+    .delete(restrictUserActions, ac.deleteAudio)
