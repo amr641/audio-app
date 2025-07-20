@@ -3,6 +3,7 @@ import Audio from "../models/audio.model.js";
 import path from "path";
 import fs from "fs";
 import { log } from "console";
+import { removeUnHandledFiles } from "../utils/removeOldFile.js";
 const addAudio = async (req, res) => {
     try {
         const { title, genre, isPrivate } = req.body;
@@ -110,16 +111,12 @@ const updateAudio = async (req, res) => {
             await audio.updateOne({ audioFile: req.file.path, ...req.body })
 
         } catch (error) {
-            fs.promises.unlink(req.file.path)
-                .then(() => { log("file deleted") })
-                .catch(err => {
-                    throw new AppError("cannot delete the file", 500)
-                })
+           await removeUnHandledFiles(req)
 
             throw new AppError("Err while updating", 500)
 
         }
-        let oldFile = path.resolve(`./uploads/audio/user_${req.user.userId}`, audio.audioFile + ".mp3");
+        let oldFile = path.resolve(`./`, audio.audioFile);
         if (!fs.existsSync(oldFile)) {
             return res.status(404).json({ success: false, message: "old Audio file not found" });
         }
@@ -145,7 +142,7 @@ const deleteAudio = async (req, res) => {
         throw new AppError("Err deleteing the audio documnet", 500)
     }
 
-    let oldFile = path.resolve(`./uploads/audio/user_${req.user.userId}`, audio.audioFile + ".mp3");
+    let oldFile = path.resolve(`./`, audio.audioFile);
     if (!fs.existsSync(oldFile)) {
         return res.status(404).json({ success: false, message: " Audio file not found" });
     }
