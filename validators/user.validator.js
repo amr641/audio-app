@@ -1,5 +1,14 @@
 import { body, cookie, param } from "express-validator";
 
+
+const validate = (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        const extractedErrors = errors.array().map(err => err.msg);
+        return res.status(400).json({ errors: extractedErrors });
+    }
+    next();
+};
 const signUpValidation = [
     body("username")
         .isString().withMessage("Username must be a string")
@@ -46,4 +55,9 @@ const loginValidation = [
         .escape()
         .isLength({ min: 6 }).withMessage("Password must be at least 6 characters long"),
 ];
-export {loginValidation,signUpValidation}
+const updateProfileValidators = [
+    body("name")
+        .optional()
+        .isLength({ min: 2 }).withMessage("Name must be at least 2 characters")
+];
+export { loginValidation, signUpValidation, updateProfileValidators, validate }

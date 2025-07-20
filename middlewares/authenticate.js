@@ -22,6 +22,7 @@ const allowedTo = (...roles) => {
         next()
     }
 }
+
 const restrictUserActions = async (req, res, next) => {
     try {
         let userId = req.user.userId;
@@ -46,3 +47,4 @@ const restrictUserActions = async (req, res, next) => {
 }
 
 export { authenticate, allowedTo, restrictUserActions }
+
