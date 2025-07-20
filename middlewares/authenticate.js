@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
 import Audio from "../models/audio.model.js";
 import { AppError } from "../utils/customErr.js";
-
+import { removeUnHandledFiles } from "../utils/removeOldFile.js";
 
 const authenticate = async (req, res, next) => {
     const { token } = req.headers;
@@ -24,16 +24,23 @@ const allowedTo = (...roles) => {
 }
 
 const restrictUserActions = async (req, res, next) => {
-    let userId = req.user.userId;
-    let { id } = req.params;
-    console.log(id);
+    try {
+        let userId = req.user.userId;
+        let { id } = req.params;
 
-    if (!id) throw new AppError("id is required", 400);
-    let audio = await Audio.findById(id);
-    if (!audio) throw new AppError("Audio Not Found", 404);
+        if (!id) throw new AppError("id is required", 400);
+        let audio = await Audio.findById(id);
+        if (!audio) throw new AppError("Audio Not Found", 404);
 
-    if (userId !== audio.addedBy) throw new AppError("You Are Not Allowed", 403);
-    next()
+        if (userId !== audio.addedBy.toString()) throw new AppError("You Are Not Allowed", 403);
+        next()
+    } catch (error) {
+        if (req.file) {
+            await removeUnHandledFiles(req)
+        }
+        throw error
+
+    }
 
 
 
