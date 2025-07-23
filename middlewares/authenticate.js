@@ -20,8 +20,8 @@ const allowedTo = (...roles) => {
         next()
     }
 }
-<<<<<<< HEAD
+
 
 export { authenticate, allowedTo }
-=======
->>>>>>> 6771c2a (yarab)
+
+
