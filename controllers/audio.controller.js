@@ -25,6 +25,7 @@ const addAudio = async (req, res) => {
             audio,
         });
 
+
     } catch (error) {
 
         res.status(500).json({ message: "Internal server error", error });
@@ -111,7 +112,7 @@ const updateAudio = async (req, res) => {
             await audio.updateOne({ audioFile: req.file.path, ...req.body })
 
         } catch (error) {
-           await removeUnHandledFiles(req)
+           await removeUnHandledFiles({userId:req.user.userId,filename:req.file.filename})
 
             throw new AppError("Err while updating", 500)
 
